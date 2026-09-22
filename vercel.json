@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/systemone",
+      "destination": "/api/systemone"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/mbti-jev-explorer.html"
+    }
+  ]
+}
