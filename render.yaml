@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: mbti-jev-explorer
+    runtime: docker
+    plan: free
+    envVars:
+      - key: TYPESAFE_API_KEY
+        sync: false
+      - key: PORT
+        value: 8080
