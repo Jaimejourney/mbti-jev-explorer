@@ -579,7 +579,7 @@ textarea:focus { border-color: rgba(47,91,255,.5); box-shadow: 0 0 0 3px rgba(47
       <div class="final-type" id="final-type">INFP</div>
       <p class="final-desc" id="final-desc">理想治愈者</p>
       <div class="final-axes" id="final-axes"></div>
-      <p class="final-note">已完成全部 20 个场景题；结果基于当前表达的概率倾向。MBTI 不是心理诊断；补充新表达后结果仍可能变化。</p>
+      <p class="final-note">已完成全部 20 个场景题；最终结果按四轴明确组合计算，JEV 的 16 型整体判断作为交叉参考。MBTI 不是心理诊断；补充新表达后结果仍可能变化。</p>
       <div class="final-actions">
         <button type="button" id="final-continue">继续校准</button>
         <button type="button" class="primary" id="final-keep">保留结果</button>
@@ -762,8 +762,9 @@ function renderFollowup() {
 }
 
 function showFinalModal() {
-  $("final-type").textContent = state.selectedType;
-  $("final-desc").textContent = TYPE_DESC[state.selectedType] || "";
+  const finalType = resolvedDisplayType();
+  $("final-type").textContent = finalType;
+  $("final-desc").textContent = TYPE_DESC[finalType] || "";
   $("final-axes").innerHTML = DIMENSIONS.map(d => {
     const p = state.probabilities[d.key];
     const letter = p[d.left] >= p[d.right] ? d.left : d.right;
@@ -787,6 +788,15 @@ function axisType() {
     const p = state.probabilities[d.key];
     return p[d.left] >= p[d.right] ? d.left : d.right;
   }).join("");
+}
+
+function resolvedDisplayType() {
+  const composed = axisType();
+  const axesClear = DIMENSIONS.every(d => {
+    const p = state.probabilities[d.key];
+    return Math.abs(p[d.left] - p[d.right]) > .01;
+  });
+  return axesClear && TYPES.includes(composed) ? composed : (state.selectedType || composed);
 }
 
 function weakestAxis() {
@@ -966,11 +976,11 @@ function render() {
     }
   }
   $("type-result").innerHTML = letters.join("");
-  const top = state.selectedType || letters.map(x => x.match(/data-dim=\"(\w)\"/)?.[1]).join("");
+  const top = resolvedDisplayType();
   $("confidence-line").textContent = state.selectedType
     ? state.finalized
-      ? `已收敛：${top}${TYPE_DESC[top] ? " · " + TYPE_DESC[top] : ""}${state.confidence != null ? " · confidence " + Number(state.confidence).toFixed(2) : ""}`
-      : `当前倾向：${top}${TYPE_DESC[top] ? " · " + TYPE_DESC[top] : ""}${state.confidence != null ? " · Choice confidence " + Number(state.confidence).toFixed(2) : ""}`
+      ? `已收敛：${top}${TYPE_DESC[top] ? " · " + TYPE_DESC[top] : ""}${top === state.selectedType && state.confidence != null ? " · confidence " + Number(state.confidence).toFixed(2) : " · 按四轴组合"}`
+      : `当前倾向：${top}${TYPE_DESC[top] ? " · " + TYPE_DESC[top] : ""}${top === state.selectedType && state.confidence != null ? " · Choice confidence " + Number(state.confidence).toFixed(2) : ""}`
     : "四个轴的概率已更新，但还不足以稳定归入某一型。";
   const values = Object.values(state.typeProbabilities).map(Number);
   const max = Math.max(...values, .0001);
@@ -979,7 +989,7 @@ function render() {
     if (!card) continue;
     const value = Number(state.typeProbabilities[type] || 0);
     card.style.setProperty("--heat", (value / max * 100) + "%");
-    card.classList.toggle("top", type === state.selectedType);
+    card.classList.toggle("top", type === top);
     card.querySelector("span").textContent = `${TYPE_DESC[type]} · ${(value*100).toFixed(1)}%`;
   }
   $("round-label").textContent = state.finalized
