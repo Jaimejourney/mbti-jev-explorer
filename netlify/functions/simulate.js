@@ -221,6 +221,7 @@ async function jevJudge(state, count) {
 }
 
 function applyEvent(state, judgment) {
+  const realmIndex = realm => REALMS.findIndex(item => item.name === realm);
   state.breakthroughItem ??= null;
   const years = 3 + Math.floor(Math.random() * 4) + judgment.severity;
   state.age += years;
