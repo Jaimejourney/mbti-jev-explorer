@@ -231,7 +231,7 @@ function applyEvent(state, judgment) {
 
   const rootSpeed = state.spiritRoot?.speed || 1;
   const polarityMultiplier = judgment.polarity === "gain" ? 1.25 : judgment.polarity === "mixed" ? .9 : .55;
-  const spiritGain = Math.round((18 + judgment.severity * 15) * rootSpeed * polarityMultiplier);
+  const spiritGain = Math.round((26 + judgment.severity * 18) * rootSpeed * polarityMultiplier);
   state.spirit = Math.min(100, state.spirit + spiritGain);
 
   if (judgment.type === "conflict") {
@@ -243,8 +243,8 @@ function applyEvent(state, judgment) {
   const currentStage = REALMS[index].stage;
   const requiredItem = BREAKTHROUGH_ITEMS[currentStage];
 
-  const shouldSeekItem = state.spirit >= 70 && !state.breakthroughItem;
-  if (shouldSeekItem && (judgment.type === "adventure" || judgment.type === "life") && judgment.polarity !== "loss" && Math.random() < .45) {
+  const shouldSeekItem = state.spirit >= 55 && !state.breakthroughItem;
+  if (shouldSeekItem && judgment.polarity !== "loss" && Math.random() < .55) {
     state.breakthroughItem = requiredItem.name;
   }
 
@@ -256,10 +256,10 @@ function applyEvent(state, judgment) {
 
   if (isMajorBreakthrough) {
     const majorStage = currentStage;
-    const successBase = majorStage === "炼气" ? .65 : majorStage === "筑基" ? .45 : majorStage === "结丹" ? .32 : .2;
-    const rootBonus = (state.spiritRoot?.speed || 1) * .08;
-    const eventBonus = judgment.type === "breakthrough" ? .12 : judgment.polarity === "gain" ? .05 : 0;
-    const successChance = Math.min(.9, successBase + rootBonus + eventBonus);
+    const successBase = majorStage === "炼气" ? .8 : majorStage === "筑基" ? .68 : majorStage === "结丹" ? .58 : majorStage === "元婴" ? .52 : .48;
+    const rootBonus = (state.spiritRoot?.speed || 1) * .1;
+    const eventBonus = judgment.type === "breakthrough" ? .15 : judgment.polarity === "gain" ? .08 : 0;
+    const successChance = Math.min(.95, successBase + rootBonus + eventBonus);
     const roll = Math.random();
     state.breakthroughItem = null;
 
@@ -270,10 +270,10 @@ function applyEvent(state, judgment) {
       state.alive = ascended;
       state.ending = ascended ? "ascended" : "tribulation_failed";
       state.realm = ascended ? "灵界修士" : "渡劫失败";
-      narrative = ascended
-        ? `${narrative} 天劫轰然而落，道躯崩而元神不灭，飞渡灵界。`
-        : `${narrative} 天劫轰然而落，元神散于雷海，化作飞灰。`;
-      const event = { age: state.age, realm: state.realm, narrative, years, type: "tribulation", polarity: ascended ? "gain" : "loss", severity: 3, breakthrough: ascended };
+      const tribulationNarrative = ascended
+        ? `天劫轰然而落，道躯崩而元神不灭，飞渡灵界。`
+        : `天劫轰然而落，元神散于雷海，化作飞灰。`;
+      const event = { age: state.age, realm: state.realm, narrative: tribulationNarrative, years, type: "tribulation", polarity: ascended ? "gain" : "loss", severity: 3, breakthrough: ascended };
       return event;
     }
 
