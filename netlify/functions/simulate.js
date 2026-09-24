@@ -1,17 +1,25 @@
 const JEVS = "https://api.typesafe.ai/v1/systemone";
 const STAGE_LOCATIONS = {
-  炼气: ["越国·黄枫谷", "越国·天南坊市", "越国·血色禁地", "越国·七玄门旧地", "越国·灵兽山外围"],
-  筑基: ["天南·落云宗", "天南·坠魔谷", "天南·昆吾山脉", "天南·阗天城", "天南·元武国"],
+  炼气: ["越国·黄枫谷", "越国·血色试炼谷", "越国·天南坊市", "越国·七玄门旧地", "越国·灵兽山外围"],
+  筑基: ["天南·燕家堡", "天南·太南小会", "天南·万岭谷", "越国·黄枫谷", "天南·落云宗"],
   结丹: ["乱星海·蛮荒岛屿", "乱星海·海底洞府", "乱星海·虚天殿", "乱星海·阴冥之地", "乱星海·巨鲸帮海域"],
-  元婴: ["大晋·边荒古城", "大晋·黄枫山", "大晋·昆吾山脉深处", "大晋·极西之地"],
-  化神: ["乱星海深处", "坠魔谷底", "灵界边缘", "天南·云梦山"]
+  元婴: ["天南·落云宗", "天南·昆吾山脉", "天南·坠魔谷", "天南·阗天城", "大晋·边荒古城"],
+  化神: ["灵界边缘", "乱星海深处", "大晋·极西之地", "天南·云梦山"]
 };
+const STAGE_ORDER = ["炼气", "筑基", "结丹", "元婴", "化神"];
+
+function availableLocations(stage) {
+  const stageIndex = STAGE_ORDER.indexOf(stage);
+  if (stageIndex < 0) return STAGE_LOCATIONS.炼气;
+  return STAGE_ORDER.slice(0, stageIndex + 1).flatMap(name => STAGE_LOCATIONS[name]);
+}
 const BREAKTHROUGH_ITEMS = {
-  炼气: "筑基丹",
-  筑基: "降尘丹",
-  结丹: "造化丹",
-  元婴: "培婴丹",
-  化神: "化神灵液"
+  炼气: { name: "筑基丹", source: "血色试炼谷机缘" },
+  筑基: { name: "降尘丹", source: "天南古修遗府" },
+  结丹: { name: "造化丹", source: "乱星海灵药秘藏" },
+  元婴: { name: "培婴丹", source: "大晋古丹方残卷" },
+  化神: { name: "化神灵液", source: "灵界边缘灵泉" },
+  渡劫: { name: "渡劫契机", source: "天道感应" }
 };
 const LLMS = "https://api.deepseek.com/chat/completions";
 
@@ -32,7 +40,10 @@ const REALMS = [
   { name: "元婴初期", stage: "元婴", maxLifespan: 1000 },
   { name: "元婴中期", stage: "元婴", maxLifespan: 1000 },
   { name: "元婴后期", stage: "元婴", maxLifespan: 1000 },
-  { name: "化神初期", stage: "化神", maxLifespan: 2000 }
+  { name: "化神初期", stage: "化神", maxLifespan: 3000 },
+  { name: "化神中期", stage: "化神", maxLifespan: 3000 },
+  { name: "化神后期", stage: "化神", maxLifespan: 3000 },
+  { name: "渡劫飞升", stage: "渡劫", maxLifespan: 3000, terminal: true }
 ];
 
 const TEMPLATES = {
@@ -210,40 +221,66 @@ async function jevJudge(state, count) {
 }
 
 function applyEvent(state, judgment) {
+  state.breakthroughItem ??= null;
   const years = 3 + Math.floor(Math.random() * 4) + judgment.severity;
   state.age += years;
   state.lifespan = Math.max(0, state.lifespan - years);
   state.year += years;
   state.eventCount += 1;
 
-  const speed = state.spiritRoot?.speed || 1;
-  const multiplier = judgment.polarity === "gain" ? 1.25 : judgment.polarity === "mixed" ? .9 : .55;
-  state.spirit = Math.min(100, state.spirit + Math.round((18 + judgment.severity * 15) * speed * multiplier));
+  const rootSpeed = state.spiritRoot?.speed || 1;
+  const polarityMultiplier = judgment.polarity === "gain" ? 1.25 : judgment.polarity === "mixed" ? .9 : .55;
+  const spiritGain = Math.round((18 + judgment.severity * 15) * rootSpeed * polarityMultiplier);
+  state.spirit = Math.min(100, state.spirit + spiritGain);
 
   if (judgment.type === "conflict") {
     if (judgment.polarity === "loss") state.lifespan = Math.max(0, state.lifespan - 3 - judgment.severity * 3);
     if (judgment.polarity === "mixed") state.lifespan = Math.max(0, state.lifespan - judgment.severity);
   }
 
+  const index = realmIndex(state.realm);
+  const currentStage = REALMS[index].stage;
+  const requiredItem = BREAKTHROUGH_ITEMS[currentStage];
+
+  const shouldSeekItem = state.spirit >= 70 && !state.breakthroughItem;
+  if (shouldSeekItem && (judgment.type === "adventure" || judgment.type === "life") && judgment.polarity !== "loss" && Math.random() < .45) {
+    state.breakthroughItem = requiredItem.name;
+  }
+
   let breakthrough = false;
-  const index = REALMS.findIndex(realm => realm.name === state.realm);
   const nextRealm = REALMS[index + 1];
   const isMajorBreakthrough = Boolean(
-    nextRealm && state.spirit >= 100 && REALMS[index].stage !== nextRealm.stage
+    nextRealm && state.spirit >= 100 && REALMS[index].stage !== nextRealm.stage && state.breakthroughItem === requiredItem.name
   );
 
   if (isMajorBreakthrough) {
-    const stage = REALMS[index].stage;
-    const base = stage === "炼气" ? .65 : stage === "筑基" ? .45 : stage === "结丹" ? .32 : .2;
+    const majorStage = currentStage;
+    const successBase = majorStage === "炼气" ? .65 : majorStage === "筑基" ? .45 : majorStage === "结丹" ? .32 : .2;
     const rootBonus = (state.spiritRoot?.speed || 1) * .08;
     const eventBonus = judgment.type === "breakthrough" ? .12 : judgment.polarity === "gain" ? .05 : 0;
-    const chance = Math.min(.9, base + rootBonus + eventBonus);
+    const successChance = Math.min(.9, successBase + rootBonus + eventBonus);
+    const roll = Math.random();
+    state.breakthroughItem = null;
 
-    if (Math.random() < chance) {
-      const oldMax = state.maxLifespan;
+    if (nextRealm.terminal) {
+      const ascensionChance = Math.min(.75, .25 + (state.spiritRoot?.speed || 1) * .12 + eventBonus);
+      const ascended = Math.random() < ascensionChance;
+      state.ended = true;
+      state.alive = ascended;
+      state.ending = ascended ? "ascended" : "tribulation_failed";
+      state.realm = ascended ? "灵界修士" : "渡劫失败";
+      narrative = ascended
+        ? `${narrative} 天劫轰然而落，道躯崩而元神不灭，飞渡灵界。`
+        : `${narrative} 天劫轰然而落，元神散于雷海，化作飞灰。`;
+      const event = { age: state.age, realm: state.realm, narrative, years, type: "tribulation", polarity: ascended ? "gain" : "loss", severity: 3, breakthrough: ascended };
+      return event;
+    }
+
+    if (roll < successChance) {
+      const oldMaxLifespan = state.maxLifespan;
       state.realm = nextRealm.name;
       state.maxLifespan = nextRealm.maxLifespan;
-      state.lifespan += Math.max(0, state.maxLifespan - oldMax);
+      state.lifespan += Math.max(0, state.maxLifespan - oldMaxLifespan);
       state.spirit = 12;
       breakthrough = true;
     } else {
@@ -258,31 +295,29 @@ function applyEvent(state, judgment) {
   }
 
   const template = TEMPLATES[judgment.type]?.[judgment.polarity] || TEMPLATES.cultivation.mixed;
-  let narrative = `${pick(STAGE_LOCATIONS[REALMS[index].stage] || STAGE_LOCATIONS.炼气)}：${pick(template)}`;
+  let narrative = pick(template);
+  if (state.breakthroughItem === requiredItem.name && shouldSeekItem) {
+    narrative = `${narrative} 得${requiredItem.source}，获${requiredItem.name}。`;
+  }
+  const location = pick(STAGE_LOCATIONS[currentStage] || STAGE_LOCATIONS.炼气);
+  narrative = `${location}：${narrative}`;
   if (isMajorBreakthrough) {
-    narrative = `${narrative} 此番冲关依赖${BREAKTHROUGH_ITEMS[REALMS[index].stage]}与自身根基。`;
+    narrative = `${narrative} 此番冲关依赖${requiredItem.name}与自身根基。`;
+  } else if (state.spirit >= 100 && !state.breakthroughItem) {
+    narrative = `${narrative} 修为已至瓶颈，唯缺${requiredItem.name}。`;
   }
   if (breakthrough) {
     narrative = `${narrative} 瓶颈松动，突破至${state.realm}，寿元上限升至${state.maxLifespan}年。`;
   } else if (isMajorBreakthrough) {
     narrative = `${narrative} 冲关失败，气血翻涌，修为跌落。`;
   }
+  const event = { age: state.age, realm: state.realm, narrative, years, type: judgment.type, polarity: judgment.polarity, severity: judgment.severity, breakthrough };
 
   if (state.lifespan <= 0) {
     state.alive = false;
     state.ended = true;
   }
-
-  return {
-    age: state.age,
-    realm: state.realm,
-    narrative,
-    years,
-    type: judgment.type,
-    polarity: judgment.polarity,
-    severity: judgment.severity,
-    breakthrough
-  };
+  return event;
 }
 
 async function epilogue(state, events) {
