@@ -1,0 +1,19 @@
+[build]
+  publish = "."
+
+[[redirects]]
+  from = "/api/simulate"
+  to = "/.netlify/functions/simulate"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/systemone"
+  to = "/.netlify/functions/systemone"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/mortal-game.html"
+  status = 200

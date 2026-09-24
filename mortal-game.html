@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>凡人修仙 · 人生推演</title>
+<style>
+:root{--ink:#111827;--paper:#f7f3e8;--paper2:#ebe4d3;--jade:#177a5b;--gold:#b47b23;--red:#b4342c;--muted:#6d675c;--line:rgba(17,24,39,.14);--shadow:0 20px 55px rgba(17,24,39,.14);--serif:"Songti SC","Noto Serif SC",Georgia,serif;--sans:"PingFang SC","Microsoft YaHei",sans-serif;--mono:"SF Mono",ui-monospace,Menlo,monospace}
+*{box-sizing:border-box}body{margin:0;color:var(--ink);font-family:var(--sans);background:radial-gradient(circle at 10% 0%,rgba(23,122,91,.12),transparent 38%),radial-gradient(circle at 90% 10%,rgba(180,123,35,.1),transparent 35%),linear-gradient(180deg,#fbf8f0,var(--paper) 45%,var(--paper2));min-height:100vh}
+.shell{width:min(1240px,calc(100% - 28px));margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+.topbar{min-height:66px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:13px}.mark{width:42px;height:42px;border:1px solid rgba(17,24,39,.16);display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,var(--jade),#3ca487 55%,var(--gold));font-family:var(--serif);font-weight:900;box-shadow:0 12px 28px rgba(23,122,91,.22)}
+h1{font-family:var(--serif);font-size:27px;margin:0;letter-spacing:-1px}.brand small{display:block;margin-top:3px;font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase}
+.workspace{flex:1;min-height:0;display:grid;grid-template-columns:320px minmax(0,1fr);gap:12px;padding:12px 0 14px}
+.panel{border:1px solid var(--line);background:rgba(255,255,255,.76);box-shadow:var(--shadow);border-radius:10px;backdrop-filter:blur(16px)}
+.state-panel{padding:16px;overflow:auto}.state-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px}.state-head h2{font-family:var(--serif);font-size:20px;margin:0}.state-head span{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.stats{display:grid;gap:9px}.stat{display:grid;grid-template-columns:72px 1fr 64px;align-items:center;gap:8px;font-size:12px}.stat b{font-family:var(--mono);font-size:11px;color:var(--muted);font-weight:400}
+.bar{height:8px;background:#e7e2d5;border-radius:999px;overflow:hidden}.bar i{display:block;height:100%;border-radius:999px}.spirit i{background:linear-gradient(90deg,var(--jade),#5aa98d)}.life i{background:linear-gradient(90deg,#2f5bff,#78a1ff)}
+.divider{height:1px;background:var(--line);margin:14px 0}.meta{display:grid;gap:7px;font-size:12px;color:#4c473d}.meta-row{display:flex;justify-content:space-between;gap:10px}.meta-row span{font-family:var(--mono);font-size:10px;color:var(--muted)}.meta-row b{font-weight:600}
+.main{display:grid;grid-template-rows:minmax(0,1fr) auto;min-height:0;overflow:hidden}
+.timeline-panel{display:flex;flex-direction:column;overflow:hidden}.timeline-head{padding:11px 16px;border-bottom:1px solid var(--line);background:rgba(248,250,255,.7);display:flex;justify-content:space-between;align-items:center}.timeline-head h3{font-family:var(--serif);font-size:18px;margin:0}.timeline-head span{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.timeline{flex:1;overflow-y:auto;padding:16px;display:grid;gap:9px;align-content:start}.event{border:1px solid var(--line);background:#fff;border-radius:9px;padding:11px 12px}.event.breakthrough{background:#f2fbf7;border-color:rgba(23,122,91,.35)}.event.death{background:#fff2f0;border-color:rgba(180,52,44,.32)}.event-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}.event-age{font-family:var(--serif);font-size:16px}.event-tags{display:flex;gap:5px}.tag{font-family:var(--mono);font-size:9px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 6px}.event p{margin:0;font-size:13px;line-height:1.65;color:#37322a}.epilogue{border:1px dashed rgba(180,123,35,.4);background:#fffaf0;border-radius:9px;padding:11px 12px;font-family:var(--serif);color:#5c4a25}
+.controls{padding:14px 16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;border-top:1px solid var(--line);background:rgba(248,250,255,.65)}
+button{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:9px;padding:13px;font-family:var(--serif);font-size:15px;cursor:pointer;transition:.18s}button:hover{transform:translateY(-2px);border-color:rgba(23,122,91,.42);box-shadow:0 14px 34px rgba(23,122,91,.12)}button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+.primary{border:0;background:linear-gradient(135deg,#177a5b,#43a687 55%,#b47b23);color:#fff;box-shadow:0 16px 38px rgba(23,122,91,.2)}
+.loading{display:none;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;color:var(--muted)}.loading.visible{display:flex}.loading i{width:9px;height:9px;border-radius:50%;background:var(--jade);animation:pulse .8s infinite alternate}@keyframes pulse{to{transform:scale(1.45);opacity:.45}}
+@media(max-width:980px){.workspace{grid-template-columns:1fr;grid-template-rows:auto minmax(360px,1fr)}.state-panel{max-height:320px}.controls{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="shell">
+  <header class="topbar">
+    <div class="brand"><div class="mark">凡</div><div><h1>凡人修仙 · 人生推演</h1><small>JEV EVENTS × LOCAL STATE</small></div></div>
+    <div class="loading" id="loading"><i></i><span>JEV 并行推演中…</span></div>
+  </header>
+  <div class="workspace">
+    <aside class="panel state-panel">
+      <div class="state-head"><h2>命格</h2><span>LOCAL STATE</span></div>
+      <div class="stats">
+        <div class="stat spirit"><b>修为</b><div class="bar"><i></i></div><output>0%</output></div>
+        <div class="stat life"><b>寿元</b><div class="bar"><i></i></div><output>0年</output></div>
+      </div>
+      <div class="divider"></div>
+      <div class="meta">
+        <div class="meta-row"><span>年龄</span><b id="age">16岁</b></div>
+        <div class="meta-row"><span>境界</span><b id="realm">未定</b></div>
+        <div class="meta-row"><span>灵根</span><b id="root">未定</b></div>
+        <div class="meta-row"><span>事件</span><b id="events">0</b></div>
+      </div>
+    </aside>
+    <section class="panel main">
+      <div class="timeline-panel">
+        <div class="timeline-head"><h3>命运长河</h3><span id="status">等待推演</span></div>
+        <div class="timeline" id="timeline"></div>
+      </div>
+      <div class="controls">
+        <button class="primary" id="start">开始</button>
+        <button id="reset">重来</button>
+      </div>
+    </section>
+  </div>
+</main>
+<script>
+const ROOTS=[{name:"天灵根",speed:1.8,weight:2},{name:"变异灵根",speed:1.5,weight:4},{name:"双灵根",speed:1.25,weight:24},{name:"三灵根",speed:1,weight:30},{name:"伪灵根",speed:.7,weight:40}];
+const START_REALMS=["炼气三层","炼气四层","炼气五层","炼气六层","炼气七层","炼气八层"];
+const START_SPIRIT={"炼气三层":20,"炼气四层":30,"炼气五层":40,"炼气六层":50,"炼气七层":65,"炼气八层":80};
+const $=id=>document.getElementById(id);
+let state=null,autoRunning=false;
+function randomRoot(){let total=ROOTS.reduce((sum,root)=>sum+root.weight,0),roll=Math.random()*total;for(const root of ROOTS){roll-=root.weight;if(roll<=0)return{...root}}return{...ROOTS.at(-1)}}
+function createState(){const root=randomRoot(),realm=START_REALMS[Math.floor(Math.random()*START_REALMS.length)];return{age:16,lifespan:104,maxLifespan:120,year:0,eventCount:0,realm,spirit:START_SPIRIT[realm],spiritRoot:root,alive:true,ended:false}}
+function render(){
+  if(!state){document.querySelectorAll(".bar i").forEach(bar=>bar.style.width="0%");document.querySelector(".spirit output").textContent="0%";document.querySelector(".life output").textContent="0年";$("age").textContent="未生";$("realm").textContent="未定";$("root").textContent="未定";$("events").textContent="0";return}
+  document.querySelector(".spirit i").style.width=state.spirit+"%";document.querySelector(".spirit output").textContent=state.spirit+"%";
+  document.querySelector(".life i").style.width=Math.max(0,Math.min(100,state.lifespan/state.maxLifespan*100))+"%";document.querySelector(".life output").textContent=state.lifespan+"年";
+  $("age").textContent=state.age+"岁";$("realm").textContent=state.realm;$("root").textContent=`${state.spiritRoot.name} · 速度${state.spiritRoot.speed}x`;$("events").textContent=state.eventCount;
+}
+function addEvent(event){const div=document.createElement("div");div.className="event"+(event.breakthrough?" breakthrough":"")+(state.ended?" death":"");div.innerHTML=`<div class="event-head"><div class="event-age">${event.age}岁 · ${event.realm}</div><div class="event-tags"><span class="tag">${event.type}</span><span class="tag">${event.polarity}</span><span class="tag">烈度${event.severity}</span></div></div><p>${event.narrative}</p>`;$("timeline").prepend(div)}
+function addEpilogue(text){if(!text)return;const div=document.createElement("div");div.className="epilogue";div.textContent=text;$("timeline").prepend(div)}
+async function simulate(count){
+  if(!state||state.ended)return;
+  $("loading").classList.add("visible");$("status").textContent="自动推进中";
+  try{
+    const response=await fetch("/api/simulate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({state,count})});
+    const data=await response.json();if(!response.ok)throw new Error(data.error);
+    state=data.state;render();for(const event of data.events)addEvent(event);addEpilogue(data.epilogue);
+  }catch(error){
+    $("status").textContent="推演失败";const div=document.createElement("div");div.className="event death";div.innerHTML=`<p>${error.message}</p>`;$("timeline").prepend(div);autoRunning=false;
+  }finally{$("loading").classList.remove("visible")}
+}
+async function startLife(){
+  if(autoRunning)return;autoRunning=true;$("start").disabled=true;state=createState();$("timeline").innerHTML="";render();$("status").textContent="自动推进中";
+  while(autoRunning&&!state.ended){await simulate(8);await new Promise(resolve=>setTimeout(resolve,250))}
+  if(autoRunning){$("status").textContent="寿元耗尽";autoRunning=false}
+  $("start").disabled=false;
+}
+function resetLife(){autoRunning=false;state=null;$("timeline").innerHTML="";render();$("status").textContent="等待开始";$("start").disabled=false;$("loading").classList.remove("visible")}
+$("start").onclick=startLife;$("reset").onclick=resetLife;render();
+</script>
+</body>
+</html>
