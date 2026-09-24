@@ -1,43 +1,129 @@
 const JEVS = "https://api.typesafe.ai/v1/systemone";
+const LOCATIONS = [
+  "黄枫谷",
+  "天南坊市",
+  "血色禁地",
+  "乱星海",
+  "坠魔谷",
+  "越国山脉",
+  "元武国",
+  "大晋边荒"
+];
+const BREAKTHROUGH_ITEMS = {
+  炼气: "筑基丹",
+  筑基: "降尘丹",
+  结丹: "造化丹",
+  元婴: "培婴丹",
+  化神: "化神灵液"
+};
 const LLMS = "https://api.deepseek.com/chat/completions";
 
 const REALMS = [
-  { name: "炼气三层", maxLifespan: 120 },
-  { name: "炼气四层", maxLifespan: 120 },
-  { name: "炼气五层", maxLifespan: 120 },
-  { name: "炼气六层", maxLifespan: 120 },
-  { name: "炼气七层", maxLifespan: 120 },
-  { name: "炼气八层", maxLifespan: 120 },
-  { name: "炼气九层", maxLifespan: 120 },
-  { name: "筑基初期", maxLifespan: 220 },
-  { name: "筑基中期", maxLifespan: 220 },
-  { name: "筑基后期", maxLifespan: 220 },
-  { name: "金丹初期", maxLifespan: 450 },
-  { name: "金丹中期", maxLifespan: 450 },
-  { name: "金丹后期", maxLifespan: 450 },
-  { name: "元婴初期", maxLifespan: 900 }
+  { name: "炼气三层", stage: "炼气", maxLifespan: 120 },
+  { name: "炼气四层", stage: "炼气", maxLifespan: 120 },
+  { name: "炼气五层", stage: "炼气", maxLifespan: 120 },
+  { name: "炼气六层", stage: "炼气", maxLifespan: 120 },
+  { name: "炼气七层", stage: "炼气", maxLifespan: 120 },
+  { name: "炼气八层", stage: "炼气", maxLifespan: 120 },
+  { name: "炼气九层", stage: "炼气", maxLifespan: 120 },
+  { name: "筑基初期", stage: "筑基", maxLifespan: 200 },
+  { name: "筑基中期", stage: "筑基", maxLifespan: 200 },
+  { name: "筑基后期", stage: "筑基", maxLifespan: 200 },
+  { name: "结丹初期", stage: "结丹", maxLifespan: 500 },
+  { name: "结丹中期", stage: "结丹", maxLifespan: 500 },
+  { name: "结丹后期", stage: "结丹", maxLifespan: 500 },
+  { name: "元婴初期", stage: "元婴", maxLifespan: 1000 },
+  { name: "元婴中期", stage: "元婴", maxLifespan: 1000 },
+  { name: "元婴后期", stage: "元婴", maxLifespan: 1000 },
+  { name: "化神初期", stage: "化神", maxLifespan: 2000 }
 ];
 
 const TEMPLATES = {
   cultivation: {
-    gain: ["闭关数载，灵力渐纯，小境界稳步推进。", "得一卷残缺吐纳法，暗中揣摩，修为略进。", "灵脉旁打坐，虽无大悟，根基愈发扎实。"],
-    loss: ["强行催动功法，气机紊乱，闭关无功。", "灵气驳杂，修炼进境迟缓。", "心浮气躁，数载苦修几乎虚耗。"],
-    mixed: ["闭关有得，却耗尽积蓄丹药。", "修为略进，却因灵气反噬留下暗伤。", "道心稍定，肉身却疲惫不堪。"]
+    gain: [
+      "于黄枫谷洞府闭关，引灵入体，境界稍进。",
+      "得青元剑诀残篇，暗中揣摩，法力渐纯。",
+      "在灵眼之旁打坐数载，根基愈发扎实。",
+      "服下培元丹，冲击瓶颈，修为再进一层。"
+    ],
+    loss: [
+      "强行催动功法，气机逆行，闭关无功。",
+      "灵气驳杂，数载苦修近乎虚耗。",
+      "冲击小境界失败，丹田隐痛。"
+    ],
+    mixed: [
+      "闭关有得，却耗尽积蓄丹药。",
+      "修为略进，却因灵气反噬留下暗伤。",
+      "悟得半篇口诀，代价是肉身疲惫。"
+    ]
   },
   adventure: {
-    gain: ["入荒山秘迹，避过禁制，得前人遗物。", "追随古图深入险地，寻得一处灵脉。", "在坍塌洞府中捡得残符数张。"],
-    loss: ["误入妖兽巢穴，仓皇逃出，随身灵物散落。", "古阵反噬，险些失了性命。", "秘境入口崩塌，所备符箓尽毁。"],
-    mixed: ["遗迹中有所获，也惊动了守阵傀儡。", "得半卷功法，却失去行囊大半。", "险死还生，换来一枚温润玉髓。"]
+    gain: [
+      "入血色禁地，避开禁制，得前人储物袋。",
+      "入坠魔谷外围，寻得一株千年灵药。",
+      "探索乱星海废墟，得半部古修功法。",
+      "误入上古洞府，得残阵玉简。"
+    ],
+    loss: [
+      "误入推山兽巢穴，仓皇逃出，储物袋尽失。",
+      "血色禁地禁制反噬，险些当场殒命。",
+      "乱星海遇三眼火狼群，折损大半灵符。"
+    ],
+    mixed: [
+      "坠魔谷中得灵药，也惊动守阵傀儡。",
+      "乱星海废墟得功法，却遇金睛猿追杀。",
+      "血色禁地险死还生，换来一枚筑基丹主药。"
+    ]
   },
   conflict: {
-    gain: ["狭路相逢，果断出手，夺其储物袋而去。", "斗法三日夜，重伤敌修，名声渐起。", "反杀截道散修，收缴法器。"],
-    loss: ["遭同门暗算，伤势数载难愈。", "被强敌追杀，弃宝保命。", "门中倾轧，失了洞府与供奉。"],
-    mixed: ["险胜对手，自己也折损本命法器。", "结怨修士，虽保住性命，却暴露行迹。", "斗法两败俱伤，各退一方。"]
+    gain: [
+      "天南道遇截道散修，果断反杀，得其法器。",
+      "乱星海夺宝斗法，重伤敌修，名声渐起。",
+      "与魔道修士狭路相逢，险胜夺宝。"
+    ],
+    loss: [
+      "遭同门暗算，伤势数载难愈。",
+      "被结丹修士追杀，弃宝保命。",
+      "乱星海遭血线蛟伏击，断其一臂。"
+    ],
+    mixed: [
+      "斗法险胜，也折损本命法器。",
+      "结怨元婴老怪，虽逃得性命，行迹尽露。",
+      "两败俱伤，各退一方。"
+    ]
   },
   life: {
-    gain: ["救下凡人少年，结下善缘。", "替旧友挡下仇家，道心更定。", "资助落魄散修，得其暗中回报。"],
-    loss: ["故人早逝，心绪难平。", "被亲友拖累，损财折物。", "旧怨缠身，暗中有人窥伺。"],
-    mixed: ["恩怨纠缠，因果难断。", "救人一命，却引得仇家注视。", "得人情报，也欠下人情。"]
+    gain: [
+      "救下凡俗少年，结下善缘。",
+      "替旧友挡下仇家，道心更定。",
+      "资助落魄散修，得其暗中报恩。"
+    ],
+    loss: [
+      "故人早逝，道心受挫。",
+      "被凡俗亲友拖累，误入争端。",
+      "旧怨缠身，暗处有人窥伺。"
+    ],
+    mixed: [
+      "恩怨纠缠，因果难断。",
+      "救人一命，却引来仇家注视。",
+      "得人情报，也欠下人情。"
+    ]
+  },
+  breakthrough: {
+    gain: [
+      "服筑基丹，灵力冲开经脉，一举筑基。",
+      "得降尘丹辅助，冲击结丹瓶颈。",
+      "闭关数十载，元婴初成。"
+    ],
+    loss: [
+      "强行冲击筑基，丹药药力反噬，经脉尽裂。",
+      "结丹失败，金丹碎散，境界跌落。",
+      "冲元婴失败，元神受损，寿元大减。"
+    ],
+    mixed: [
+      "冲击大境界未成，却悟得一丝契机。",
+      "丹药药力不足，勉强稳住境界，留下隐患。"
+    ]
   }
 };
 
@@ -75,7 +161,8 @@ async function jevJudge(state, count) {
         cultivation: "闭关、修炼、突破、走火入魔",
         adventure: "秘境、遗迹、古阵、荒野探索",
         conflict: "斗法、仇杀、门派冲突、截道",
-        life: "善缘、故人、凡俗牵挂、道心因果"
+        life: "善缘、故人、凡俗牵挂、道心因果",
+        breakthrough: "大境界瓶颈、突破尝试、丹药机缘、境界跌落"
       }
     };
     questions[`severity_${index}`] = {
@@ -107,7 +194,8 @@ async function jevJudge(state, count) {
           realm: state.realm,
           spiritRoot: state.spiritRoot?.name,
           spirit: state.spirit,
-          eventCount: state.eventCount
+          eventCount: state.eventCount,
+          canAttemptBreakthrough: state.spirit >= 100
         },
         eventSequence: Array.from({ length: count }, (_, index) => index + 1)
       },
@@ -142,19 +230,46 @@ function applyEvent(state, judgment) {
 
   let breakthrough = false;
   const index = REALMS.findIndex(realm => realm.name === state.realm);
-  if (state.spirit >= 100 && index >= 0 && index < REALMS.length - 1) {
-    const oldMax = state.maxLifespan;
-    state.realm = REALMS[index + 1].name;
-    state.maxLifespan = REALMS[index + 1].maxLifespan;
-    state.lifespan += Math.max(0, state.maxLifespan - oldMax);
+  const nextRealm = REALMS[index + 1];
+  const isMajorBreakthrough = Boolean(
+    nextRealm && state.spirit >= 100 && REALMS[index].stage !== nextRealm.stage
+  );
+
+  if (isMajorBreakthrough) {
+    const stage = REALMS[index].stage;
+    const base = stage === "炼气" ? .65 : stage === "筑基" ? .45 : stage === "结丹" ? .32 : .2;
+    const rootBonus = (state.spiritRoot?.speed || 1) * .08;
+    const eventBonus = judgment.type === "breakthrough" ? .12 : judgment.polarity === "gain" ? .05 : 0;
+    const chance = Math.min(.9, base + rootBonus + eventBonus);
+
+    if (Math.random() < chance) {
+      const oldMax = state.maxLifespan;
+      state.realm = nextRealm.name;
+      state.maxLifespan = nextRealm.maxLifespan;
+      state.lifespan += Math.max(0, state.maxLifespan - oldMax);
+      state.spirit = 12;
+      breakthrough = true;
+    } else {
+      state.spirit = Math.max(45, state.spirit - 20);
+      state.lifespan = Math.max(0, state.lifespan - 5 - judgment.severity * 3);
+    }
+  } else if (state.spirit >= 100 && index >= 0 && index < REALMS.length - 1) {
+    state.realm = nextRealm.name;
+    state.maxLifespan = nextRealm.maxLifespan;
     state.spirit = 12;
     breakthrough = true;
   }
 
   const template = TEMPLATES[judgment.type]?.[judgment.polarity] || TEMPLATES.cultivation.mixed;
-  const narrative = breakthrough
-    ? `${pick(template)} 水到渠成，突破至${state.realm}，寿元上限升至${state.maxLifespan}年。`
-    : pick(template);
+  let narrative = `${pick(LOCATIONS)}：${pick(template)}`;
+  if (isMajorBreakthrough) {
+    narrative = `${narrative} 此番冲关依赖${BREAKTHROUGH_ITEMS[REALMS[index].stage]}与自身根基。`;
+  }
+  if (breakthrough) {
+    narrative = `${narrative} 瓶颈松动，突破至${state.realm}，寿元上限升至${state.maxLifespan}年。`;
+  } else if (isMajorBreakthrough) {
+    narrative = `${narrative} 冲关失败，气血翻涌，修为跌落。`;
+  }
 
   if (state.lifespan <= 0) {
     state.alive = false;
