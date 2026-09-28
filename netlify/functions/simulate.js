@@ -37,17 +37,20 @@ const TEMPLATES = {
       "于黄枫谷洞府闭关，引灵入体，境界稍进。",
       "得青元剑诀残篇，暗中揣摩，法力渐纯。",
       "在灵眼之旁打坐数载，根基愈发扎实。",
-      "灵力运转如意，小境界悄然推进。"
+      "灵力运转如意，小境界悄然推进。",
+      "吞服灵乳，经脉拓宽，修为一日千里。"
     ],
     loss: [
       "强行催动功法，气机逆行，闭关无功。",
       "灵气驳杂，数载苦修近乎虚耗。",
-      "冲击小境界失败，丹田隐痛。"
+      "冲击小境界失败，丹田隐痛。",
+      "功法冲突，经脉如刀绞，苦修尽废。"
     ],
     mixed: [
       "闭关有得，却耗损不少心血。",
       "修为略进，却因灵气反噬留下暗伤。",
-      "悟得半篇口诀，代价是肉身疲惫。"
+      "悟得半篇口诀，代价是肉身疲惫。",
+      "灵力精进，心魔却也悄然滋生。"
     ]
   },
   adventure: {
@@ -55,51 +58,63 @@ const TEMPLATES = {
       "深入禁地，避开古阵，得前人储物袋。",
       "入坠魔谷外围，寻得一株千年灵药。",
       "探索古修废墟，得半部残篇功法。",
-      "误入上古洞府，得残阵玉简。"
+      "误入上古洞府，得残阵玉简。",
+      "血色禁地深处，得一枚古修玉简。"
     ],
     loss: [
       "误入妖兽巢穴，仓皇逃出，储物袋尽失。",
       "禁制反噬，险些当场殒命。",
-      "山林遇三眼火狼群，折损大半灵符。"
+      "山林遇三眼火狼群，折损大半灵符。",
+      "血色禁地随机传送，落入凶险绝地。",
+      "秘境出口崩塌，耗尽符箓强行破出。"
     ],
     mixed: [
       "得千年灵药，也惊动守阵傀儡。",
       "废墟中得功法，却遇金睛猿追杀。",
-      "险死还生，换来一丝突破契机。"
+      "险死还生，换来一丝突破契机。",
+      "虚天殿中夺宝，却被老怪盯上。",
+      "得古传送阵残图，也引来散修觊觎。"
     ]
   },
   conflict: {
     gain: [
       "山道遇截道散修，果断反杀，得其法器。",
       "夺宝斗法，重伤敌修，名声渐起。",
-      "与魔道修士狭路相逢，险胜夺宝。"
+      "与魔道修士狭路相逢，险胜夺宝。",
+      "斗法时突施冷箭，反夺对方飞剑。"
     ],
     loss: [
       "遭同门暗算，伤势数载难愈。",
       "被结丹修士追杀，弃宝保命。",
-      "遭血线蛟伏击，断其一臂。"
+      "遭血线蛟伏击，断其一臂。",
+      "燕家堡夺宝失利，被迫跳入寒潭逃生。",
+      "鬼灵门余孽围杀，你虽逃出却元气大伤。"
     ],
     mixed: [
       "斗法险胜，也折损本命法器。",
       "结怨元婴老怪，虽逃得性命，行迹尽露。",
-      "两败俱伤，各退一方。"
+      "两败俱伤，各退一方。",
+      "抢得灵药，却被仇家记下名姓。"
     ]
   },
   life: {
     gain: [
       "救下凡俗少年，结下善缘。",
       "替旧友挡下仇家，道心更定。",
-      "资助落魄散修，得其暗中报恩。"
+      "资助落魄散修，得其暗中报恩。",
+      "救故人于生死一线，得传一门秘术。"
     ],
     loss: [
       "故人早逝，道心受挫。",
       "被凡俗亲友拖累，误入争端。",
-      "旧怨缠身，暗处有人窥伺。"
+      "旧怨缠身，暗处有人窥伺。",
+      "为救旧人耗尽积蓄，反遭猜忌。"
     ],
     mixed: [
       "恩怨纠缠，因果难断。",
       "救人一命，却引来仇家注视。",
-      "得人情报，也欠下人情。"
+      "得人情报，也欠下人情。",
+      "重逢旧识，却各怀算计。"
     ]
   },
   breakthrough: {
@@ -208,6 +223,7 @@ async function jevJudge(state, count) {
 function applyEvent(state, judgment) {
   const realmIndex = realm => REALMS.findIndex(item => item.name === realm);
   state.stageEventCount ??= 0;
+  state.foundationDamage ??= 0;
   const years = 4 + Math.floor(Math.random() * 5) + judgment.severity;
   state.age += years;
   state.lifespan = Math.max(0, state.lifespan - years);
@@ -216,9 +232,35 @@ function applyEvent(state, judgment) {
   state.stageEventCount += 1;
 
   const rootSpeed = state.spiritRoot?.speed || 1;
+  let fateTwist = null;
+
+  if (Math.random() < .12) {
+    const twists = ["realmFall", "spiritWound", "lifeDrain", "foundationDamage", "greatFortune"];
+    fateTwist = pick(twists);
+  }
+
   const polarityMultiplier = judgment.polarity === "gain" ? 1.25 : judgment.polarity === "mixed" ? .9 : .55;
-  const spiritGain = Math.round((24 + judgment.severity * 18) * rootSpeed * polarityMultiplier);
+  let spiritGain = Math.round((24 + judgment.severity * 18) * rootSpeed * polarityMultiplier);
+
+  if (fateTwist === "spiritWound") spiritGain = 0;
+  if (fateTwist === "greatFortune") spiritGain *= 2;
   state.spirit = Math.min(100, state.spirit + spiritGain);
+
+  if (fateTwist === "lifeDrain") {
+    state.lifespan = Math.max(0, state.lifespan - 12 - Math.floor(Math.random() * 19));
+  }
+  if (fateTwist === "foundationDamage") {
+    state.foundationDamage = Math.min(3, state.foundationDamage + 1);
+  }
+  if (fateTwist === "realmFall") {
+    const indexBeforeFall = realmIndex(state.realm);
+    if (indexBeforeFall > 0) {
+      state.realm = REALMS[indexBeforeFall - 1].name;
+      state.maxLifespan = REALMS[indexBeforeFall - 1].maxLifespan;
+      state.spirit = Math.max(10, Math.min(60, state.spirit - 20));
+      state.stageEventCount = Math.max(0, state.stageEventCount - 2);
+    }
+  }
 
   if (judgment.type === "conflict") {
     if (judgment.polarity === "loss") state.lifespan = Math.max(0, state.lifespan - 3 - judgment.severity * 3);
@@ -241,7 +283,7 @@ function applyEvent(state, judgment) {
     const successBase = majorStage === "炼气" ? .7 : majorStage === "筑基" ? .45 : majorStage === "结丹" ? .32 : majorStage === "元婴" ? .24 : .2;
     const rootBonus = (state.spiritRoot?.speed || 1) * .04;
     const eventBonus = judgment.type === "breakthrough" ? .08 : judgment.polarity === "gain" ? .04 : 0;
-    const successChance = Math.min(.82, successBase + rootBonus + eventBonus);
+    const successChance = Math.max(.05, Math.min(.82, successBase + rootBonus + eventBonus - state.foundationDamage * .12));
     const roll = Math.random();
 
     if (nextRealm.terminal) {
@@ -267,8 +309,9 @@ function applyEvent(state, judgment) {
       state.stageEventCount = 0;
       breakthrough = true;
     } else {
-      state.spirit = Math.max(70, state.spirit - 30);
-      state.lifespan = Math.max(0, state.lifespan - 5 - judgment.severity * 3);
+      state.spirit = Math.max(40, state.spirit - 40);
+      state.lifespan = Math.max(0, state.lifespan - 10 - judgment.severity * 5);
+      if (Math.random() < .2) state.foundationDamage = Math.min(3, state.foundationDamage + 1);
     }
   } else if (
     state.spirit >= 100 &&
@@ -284,6 +327,14 @@ function applyEvent(state, judgment) {
 
   const template = TEMPLATES[judgment.type]?.[judgment.polarity] || TEMPLATES.cultivation.mixed;
   let narrative = pick(template);
+  const twistText = {
+    realmFall: "命运陡转，境界跌落，旧日修为尽成泡影。",
+    spiritWound: "重创袭来，修为停滞，数载苦修难进一步。",
+    lifeDrain: "寿元骤损，白发丛生，天命愈发逼人。",
+    foundationDamage: "道基受损，此后冲关愈发艰难。",
+    greatFortune: "大机缘骤至，灵力如潮，修为暴涨。"
+  };
+  if (fateTwist) narrative = `${narrative} ${twistText[fateTwist]}`;
   if (isMajorBreakthrough) {
     narrative = `${narrative} 修为圆满，尝试冲击大境界。`;
   } else if (state.spirit >= 100) {
@@ -294,7 +345,7 @@ function applyEvent(state, judgment) {
   } else if (isMajorBreakthrough) {
     narrative = `${narrative} 冲关失败，气血翻涌，修为跌落。`;
   }
-  const event = { age: state.age, realm: state.realm, stateAfter: { ...state }, narrative, years, type: judgment.type, polarity: judgment.polarity, severity: judgment.severity, breakthrough };
+  const event = { age: state.age, realm: state.realm, stateAfter: { ...state }, narrative, years, type: judgment.type, polarity: judgment.polarity, severity: judgment.severity, breakthrough, fateTwist };
 
   if (state.lifespan <= 0) {
     state.alive = false;
