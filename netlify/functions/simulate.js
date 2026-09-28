@@ -22,12 +22,12 @@ const BREAKTHROUGH_ITEMS = {
   渡劫: { name: "渡劫契机", source: "天道感应" }
 };
 
-const MIN_BREAKTHROUGH_AGE = {
-  炼气: 18,
-  筑基: 50,
+const TARGET_STAGE_AGE = {
+  筑基: 25,
   结丹: 120,
-  元婴: 300,
-  化神: 500
+  元婴: 220,
+  化神: 500,
+  渡劫: 900
 };
 const LLMS = "https://api.deepseek.com/chat/completions";
 
@@ -231,11 +231,13 @@ async function jevJudge(state, count) {
 function applyEvent(state, judgment) {
   const realmIndex = realm => REALMS.findIndex(item => item.name === realm);
   state.breakthroughItem ??= null;
+  state.stageEventCount ??= 0;
   const years = 4 + Math.floor(Math.random() * 5) + judgment.severity;
   state.age += years;
   state.lifespan = Math.max(0, state.lifespan - years);
   state.year += years;
   state.eventCount += 1;
+  state.stageEventCount += 1;
 
   const rootSpeed = state.spiritRoot?.speed || 1;
   const polarityMultiplier = judgment.polarity === "gain" ? 1.25 : judgment.polarity === "mixed" ? .9 : .55;
@@ -258,14 +260,16 @@ function applyEvent(state, judgment) {
 
   let breakthrough = false;
   const nextRealm = REALMS[index + 1];
-  const stageReady = state.age >= (MIN_BREAKTHROUGH_AGE[currentStage] || 0);
+  const targetStage = nextRealm?.stage;
+  const ageReady = state.age >= (TARGET_STAGE_AGE[targetStage] || 0);
+  const stageReady = ageReady && state.stageEventCount >= 3;
   const isMajorBreakthrough = Boolean(
     nextRealm && state.spirit >= 100 && stageReady && REALMS[index].stage !== nextRealm.stage && state.breakthroughItem === requiredItem.name
   );
 
   if (isMajorBreakthrough) {
     const majorStage = currentStage;
-    const successBase = majorStage === "炼气" ? .55 : majorStage === "筑基" ? .36 : majorStage === "结丹" ? .28 : majorStage === "元婴" ? .22 : .18;
+    const successBase = majorStage === "炼气" ? .7 : majorStage === "筑基" ? .45 : majorStage === "结丹" ? .32 : majorStage === "元婴" ? .24 : .2;
     const rootBonus = (state.spiritRoot?.speed || 1) * .04;
     const eventBonus = judgment.type === "breakthrough" ? .08 : judgment.polarity === "gain" ? .04 : 0;
     const successChance = Math.min(.82, successBase + rootBonus + eventBonus);
@@ -292,12 +296,18 @@ function applyEvent(state, judgment) {
       state.maxLifespan = nextRealm.maxLifespan;
       state.lifespan += Math.max(0, state.maxLifespan - oldMaxLifespan);
       state.spirit = 12;
+      state.stageEventCount = 0;
       breakthrough = true;
     } else {
       state.spirit = Math.max(70, state.spirit - 30);
       state.lifespan = Math.max(0, state.lifespan - 5 - judgment.severity * 3);
     }
-  } else if (state.spirit >= 100 && index >= 0 && index < REALMS.length - 1) {
+  } else if (
+    state.spirit >= 100 &&
+    index >= 0 &&
+    index < REALMS.length - 1 &&
+    REALMS[index].stage === nextRealm.stage
+  ) {
     state.realm = nextRealm.name;
     state.maxLifespan = nextRealm.maxLifespan;
     state.spirit = 12;
@@ -326,6 +336,11 @@ function applyEvent(state, judgment) {
   if (state.lifespan <= 0) {
     state.alive = false;
     state.ended = true;
+  }
+  if (currentStage === "渡劫") {
+    state.ended = true;
+    state.alive = false;
+    state.ending ||= "tribulation_failed";
   }
   return event;
 }

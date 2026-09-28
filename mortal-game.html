@@ -24,6 +24,14 @@ h1{font-family:var(--serif);font-size:27px;margin:0;letter-spacing:-1px}.brand s
 button{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:9px;padding:13px;font-family:var(--serif);font-size:15px;cursor:pointer;transition:.18s}button:hover{transform:translateY(-2px);border-color:rgba(23,122,91,.42);box-shadow:0 14px 34px rgba(23,122,91,.12)}button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
 .primary{border:0;background:linear-gradient(135deg,#177a5b,#43a687 55%,#b47b23);color:#fff;box-shadow:0 16px 38px rgba(23,122,91,.2)}
 .loading{display:none;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;color:var(--muted)}.loading.visible{display:flex}.loading i{width:9px;height:9px;border-radius:50%;background:var(--jade);animation:pulse .8s infinite alternate}@keyframes pulse{to{transform:scale(1.45);opacity:.45}}
+.final-modal{position:fixed;inset:0;z-index:1000;display:none;place-items:center;background:rgba(17,24,39,.32);backdrop-filter:blur(4px)}.final-modal.visible{display:grid}
+.final-card{width:min(430px,calc(100% - 32px));background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 30px 80px rgba(17,24,39,.22);padding:20px}
+.final-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--muted)}
+.final-title{font-family:var(--serif);font-size:32px;margin:8px 0 5px}
+.final-desc{font-size:13px;color:var(--muted);margin:0 0 14px}
+.final-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-bottom:14px}
+.final-stat{border:1px solid var(--line);border-radius:8px;padding:9px;background:#fbfcff}.final-stat b{display:block;font-family:var(--serif);font-size:16px}.final-stat span{font-family:var(--mono);font-size:9px;color:var(--muted)}
+.final-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 @media(max-width:980px){.workspace{grid-template-columns:1fr;grid-template-rows:auto minmax(360px,1fr)}.state-panel{max-height:320px}}
 </style>
 </head>
@@ -59,6 +67,18 @@ button{border:1px solid var(--line);background:#fff;color:var(--ink);border-radi
     </section>
   </div>
 </main>
+<div class="final-modal" id="final-modal">
+  <div class="final-card">
+    <div class="final-eyebrow" id="final-eyebrow">LIFE ENDED</div>
+    <div class="final-title" id="final-title">寿元耗尽</div>
+    <p class="final-desc" id="final-desc"></p>
+    <div class="final-grid" id="final-grid"></div>
+    <div class="final-actions">
+      <button type="button" id="close-final">回顾命运</button>
+      <button type="button" class="primary" id="restart-final">再来一世</button>
+    </div>
+  </div>
+</div>
 <script>
 const ROOTS=[{name:"天灵根",speed:1.8,weight:2},{name:"变异灵根",speed:1.5,weight:4},{name:"双灵根",speed:1.25,weight:24},{name:"三灵根",speed:1,weight:30},{name:"伪灵根",speed:.7,weight:40}];
 const START_REALMS=["炼气三层","炼气四层","炼气五层","炼气六层","炼气七层","炼气八层"];
@@ -75,6 +95,16 @@ function render(){
 }
 function addEvent(event){const div=document.createElement("div");div.className="event"+(event.breakthrough?" breakthrough":"")+(state.ended?" death":"");div.innerHTML=`<div class="event-head"><div class="event-age">${event.age}岁 · ${event.realm}</div><div class="event-tags"><span class="tag">${event.type}</span><span class="tag">${event.polarity}</span><span class="tag">烈度${event.severity}</span></div></div><p>${event.narrative}</p>`;$("timeline").prepend(div)}
 function addEpilogue(text){if(!text)return;const div=document.createElement("div");div.className="epilogue";div.textContent=text;$("timeline").prepend(div)}
+function showFinal(){
+  const ending=state.ending;
+  const ascended=ending==="ascended";
+  const tribulation=ending==="tribulation_failed";
+  $("final-eyebrow").textContent=ascended?"ASCENDED TO SPIRIT REALM":tribulation?"TRIBULATION FAILED":"LIFESPAN EXHAUSTED";
+  $("final-title").textContent=ascended?"飞升灵界":tribulation?"渡劫失败":"寿元耗尽";
+  $("final-desc").textContent=ascended?"天劫已过，元神不灭，你踏入另一片天地。":tribulation?"天劫未过，元神散于雷海。":"凡人寿数已尽，修行止步于此。";
+  $("final-grid").innerHTML=`<div class="final-stat"><b>${state.age}岁</b><span>终年</span></div><div class="final-stat"><b>${state.realm}</b><span>最终境界</span></div><div class="final-stat"><b>${state.spiritRoot.name}</b><span>灵根</span></div><div class="final-stat"><b>${state.eventCount}</b><span>经历事件</span></div>`;
+  $("final-modal").classList.add("visible");
+}
 async function simulate(count){
   if(!state||state.ended)return;
   $("loading").classList.add("visible");$("status").textContent="自动推进中";
@@ -89,11 +119,13 @@ async function simulate(count){
 async function startLife(){
   if(autoRunning)return;autoRunning=true;$("start").disabled=true;state=createState();$("timeline").innerHTML="";render();$("status").textContent="自动推进中";
   while(autoRunning&&!state.ended){await simulate(8);await new Promise(resolve=>setTimeout(resolve,250))}
-  if(autoRunning){$("status").textContent=state.ending==="ascended"?"飞升灵界":"寿元耗尽";autoRunning=false;$("start").textContent="重来"}
+  if(autoRunning){$("status").textContent=state.ending==="ascended"?"飞升灵界":state.ending==="tribulation_failed"?"渡劫失败":"寿元耗尽";autoRunning=false;$("start").textContent="重来";showFinal()}
   $("start").disabled=false;
 }
-function resetLife(){autoRunning=false;state=null;$("timeline").innerHTML="";render();$("status").textContent="等待开始";$("start").textContent="开始";$("start").disabled=false;$("loading").classList.remove("visible")}
+function resetLife(){autoRunning=false;state=null;$("timeline").innerHTML="";render();$("status").textContent="等待开始";$("start").textContent="开始";$("start").disabled=false;$("loading").classList.remove("visible");$("final-modal").classList.remove("visible")}
 $("start").onclick=()=>{if(state?.ended){resetLife()}else{startLife()}};render();
+$("close-final").onclick=()=>$("final-modal").classList.remove("visible");
+$("restart-final").onclick=resetLife;
 </script>
 </body>
 </html>
