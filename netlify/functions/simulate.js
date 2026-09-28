@@ -21,6 +21,14 @@ const BREAKTHROUGH_ITEMS = {
   化神: { name: "化神灵液", source: "灵界边缘灵泉" },
   渡劫: { name: "渡劫契机", source: "天道感应" }
 };
+
+const MIN_BREAKTHROUGH_AGE = {
+  炼气: 18,
+  筑基: 50,
+  结丹: 120,
+  元婴: 300,
+  化神: 500
+};
 const LLMS = "https://api.deepseek.com/chat/completions";
 
 const REALMS = [
@@ -223,7 +231,7 @@ async function jevJudge(state, count) {
 function applyEvent(state, judgment) {
   const realmIndex = realm => REALMS.findIndex(item => item.name === realm);
   state.breakthroughItem ??= null;
-  const years = 3 + Math.floor(Math.random() * 4) + judgment.severity;
+  const years = 4 + Math.floor(Math.random() * 5) + judgment.severity;
   state.age += years;
   state.lifespan = Math.max(0, state.lifespan - years);
   state.year += years;
@@ -231,7 +239,7 @@ function applyEvent(state, judgment) {
 
   const rootSpeed = state.spiritRoot?.speed || 1;
   const polarityMultiplier = judgment.polarity === "gain" ? 1.25 : judgment.polarity === "mixed" ? .9 : .55;
-  const spiritGain = Math.round((26 + judgment.severity * 18) * rootSpeed * polarityMultiplier);
+  const spiritGain = Math.round((24 + judgment.severity * 18) * rootSpeed * polarityMultiplier);
   state.spirit = Math.min(100, state.spirit + spiritGain);
 
   if (judgment.type === "conflict") {
@@ -243,25 +251,25 @@ function applyEvent(state, judgment) {
   const currentStage = REALMS[index].stage;
   const requiredItem = BREAKTHROUGH_ITEMS[currentStage];
 
-  const shouldSeekItem = state.spirit >= 55 && !state.breakthroughItem;
-  if (shouldSeekItem && judgment.polarity !== "loss" && Math.random() < .55) {
+  const shouldSeekItem = state.spirit >= 70 && !state.breakthroughItem;
+  if (shouldSeekItem && judgment.polarity !== "loss" && Math.random() < .5) {
     state.breakthroughItem = requiredItem.name;
   }
 
   let breakthrough = false;
   const nextRealm = REALMS[index + 1];
+  const stageReady = state.age >= (MIN_BREAKTHROUGH_AGE[currentStage] || 0);
   const isMajorBreakthrough = Boolean(
-    nextRealm && state.spirit >= 100 && REALMS[index].stage !== nextRealm.stage && state.breakthroughItem === requiredItem.name
+    nextRealm && state.spirit >= 100 && stageReady && REALMS[index].stage !== nextRealm.stage && state.breakthroughItem === requiredItem.name
   );
 
   if (isMajorBreakthrough) {
     const majorStage = currentStage;
-    const successBase = majorStage === "炼气" ? .8 : majorStage === "筑基" ? .68 : majorStage === "结丹" ? .58 : majorStage === "元婴" ? .52 : .48;
-    const rootBonus = (state.spiritRoot?.speed || 1) * .1;
-    const eventBonus = judgment.type === "breakthrough" ? .15 : judgment.polarity === "gain" ? .08 : 0;
-    const successChance = Math.min(.95, successBase + rootBonus + eventBonus);
+    const successBase = majorStage === "炼气" ? .55 : majorStage === "筑基" ? .36 : majorStage === "结丹" ? .28 : majorStage === "元婴" ? .22 : .18;
+    const rootBonus = (state.spiritRoot?.speed || 1) * .04;
+    const eventBonus = judgment.type === "breakthrough" ? .08 : judgment.polarity === "gain" ? .04 : 0;
+    const successChance = Math.min(.82, successBase + rootBonus + eventBonus);
     const roll = Math.random();
-    state.breakthroughItem = null;
 
     if (nextRealm.terminal) {
       const ascensionChance = Math.min(.75, .25 + (state.spiritRoot?.speed || 1) * .12 + eventBonus);
@@ -279,13 +287,14 @@ function applyEvent(state, judgment) {
 
     if (roll < successChance) {
       const oldMaxLifespan = state.maxLifespan;
+      state.breakthroughItem = null;
       state.realm = nextRealm.name;
       state.maxLifespan = nextRealm.maxLifespan;
       state.lifespan += Math.max(0, state.maxLifespan - oldMaxLifespan);
       state.spirit = 12;
       breakthrough = true;
     } else {
-      state.spirit = Math.max(45, state.spirit - 20);
+      state.spirit = Math.max(70, state.spirit - 30);
       state.lifespan = Math.max(0, state.lifespan - 5 - judgment.severity * 3);
     }
   } else if (state.spirit >= 100 && index >= 0 && index < REALMS.length - 1) {
