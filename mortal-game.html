@@ -93,7 +93,7 @@ function render(){
   document.querySelector(".life i").style.width=Math.max(0,Math.min(100,state.lifespan/state.maxLifespan*100))+"%";document.querySelector(".life output").textContent=state.lifespan+"年";
   $("age").textContent=state.age+"岁";$("realm").textContent=state.realm;$("root").textContent=`${state.spiritRoot.name} · 速度${state.spiritRoot.speed}x`;$("events").textContent=state.eventCount;
 }
-function addEvent(event){const div=document.createElement("div");div.className="event"+(event.breakthrough?" breakthrough":"")+(state.ended?" death":"");div.innerHTML=`<div class="event-head"><div class="event-age">${event.age}岁 · ${event.realm}</div><div class="event-tags"><span class="tag">${event.type}</span><span class="tag">${event.polarity}</span><span class="tag">烈度${event.severity}</span></div></div><p>${event.narrative}</p>`;$("timeline").prepend(div)}
+function addEvent(event){const div=document.createElement("div");div.className="event"+(event.breakthrough?" breakthrough":"")+(state.ended?" death":"");div.innerHTML=`<div class="event-head"><div class="event-age">${event.age}岁 · ${event.realm}</div><div class="event-tags"><span class="tag">${event.type}</span><span class="tag">${event.polarity}</span><span class="tag">烈度${event.severity}</span>${event.stateAfter?`<span class="tag">修为${event.stateAfter.spirit}%</span>`:""}</div></div><p>${event.narrative}</p>`;$("timeline").prepend(div)}
 function addEpilogue(text){if(!text)return;const div=document.createElement("div");div.className="epilogue";div.textContent=text;$("timeline").prepend(div)}
 function showFinal(){
   const ending=state.ending;
