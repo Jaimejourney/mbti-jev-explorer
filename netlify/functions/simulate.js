@@ -254,7 +254,7 @@ function applyEvent(state, judgment) {
       const tribulationNarrative = ascended
         ? `天劫轰然而落，道躯崩而元神不灭，飞渡灵界。`
         : `天劫轰然而落，元神散于雷海，化作飞灰。`;
-      const event = { age: state.age, realm: state.realm, narrative: tribulationNarrative, years, type: "tribulation", polarity: ascended ? "gain" : "loss", severity: 3, breakthrough: ascended };
+      const event = { age: state.age, realm: state.realm, stateAfter: { ...state }, narrative: tribulationNarrative, years, type: "tribulation", polarity: ascended ? "gain" : "loss", severity: 3, breakthrough: ascended };
       return event;
     }
 
@@ -294,7 +294,7 @@ function applyEvent(state, judgment) {
   } else if (isMajorBreakthrough) {
     narrative = `${narrative} 冲关失败，气血翻涌，修为跌落。`;
   }
-  const event = { age: state.age, realm: state.realm, narrative, years, type: judgment.type, polarity: judgment.polarity, severity: judgment.severity, breakthrough };
+  const event = { age: state.age, realm: state.realm, stateAfter: { ...state }, narrative, years, type: judgment.type, polarity: judgment.polarity, severity: judgment.severity, breakthrough };
 
   if (state.lifespan <= 0) {
     state.alive = false;

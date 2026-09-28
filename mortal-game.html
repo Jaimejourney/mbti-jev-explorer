@@ -111,7 +111,8 @@ async function simulate(count){
   try{
     const response=await fetch("/api/simulate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({state,count})});
     const data=await response.json();if(!response.ok)throw new Error(data.error);
-    state=data.state;render();for(const event of data.events)addEvent(event);addEpilogue(data.epilogue);
+    for(const event of data.events){if(event.stateAfter)state=event.stateAfter;render();addEvent(event)}
+    state=data.state;render();addEpilogue(data.epilogue);
   }catch(error){
     $("status").textContent="推演失败";const div=document.createElement("div");div.className="event death";div.innerHTML=`<p>${error.message}</p>`;$("timeline").prepend(div);autoRunning=false;
   }finally{$("loading").classList.remove("visible")}
