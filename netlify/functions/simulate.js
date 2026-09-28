@@ -1,27 +1,4 @@
 const JEVS = "https://api.typesafe.ai/v1/systemone";
-const STAGE_LOCATIONS = {
-  炼气: ["越国·黄枫谷", "越国·血色试炼谷", "越国·天南坊市", "越国·七玄门旧地", "越国·灵兽山外围"],
-  筑基: ["天南·燕家堡", "天南·太南小会", "天南·万岭谷", "越国·黄枫谷", "天南·落云宗"],
-  结丹: ["乱星海·蛮荒岛屿", "乱星海·海底洞府", "乱星海·虚天殿", "乱星海·阴冥之地", "乱星海·巨鲸帮海域"],
-  元婴: ["天南·落云宗", "天南·昆吾山脉", "天南·坠魔谷", "天南·阗天城", "大晋·边荒古城"],
-  化神: ["灵界边缘", "乱星海深处", "大晋·极西之地", "天南·云梦山"]
-};
-const STAGE_ORDER = ["炼气", "筑基", "结丹", "元婴", "化神"];
-
-function availableLocations(stage) {
-  const stageIndex = STAGE_ORDER.indexOf(stage);
-  if (stageIndex < 0) return STAGE_LOCATIONS.炼气;
-  return STAGE_ORDER.slice(0, stageIndex + 1).flatMap(name => STAGE_LOCATIONS[name]);
-}
-const BREAKTHROUGH_ITEMS = {
-  炼气: { name: "筑基丹", source: "血色试炼谷机缘" },
-  筑基: { name: "降尘丹", source: "天南古修遗府" },
-  结丹: { name: "造化丹", source: "乱星海灵药秘藏" },
-  元婴: { name: "培婴丹", source: "大晋古丹方残卷" },
-  化神: { name: "化神灵液", source: "灵界边缘灵泉" },
-  渡劫: { name: "渡劫契机", source: "天道感应" }
-};
-
 const TARGET_STAGE_AGE = {
   筑基: 25,
   结丹: 120,
@@ -60,7 +37,7 @@ const TEMPLATES = {
       "于黄枫谷洞府闭关，引灵入体，境界稍进。",
       "得青元剑诀残篇，暗中揣摩，法力渐纯。",
       "在灵眼之旁打坐数载，根基愈发扎实。",
-      "服下培元丹，冲击瓶颈，修为再进一层。"
+      "灵力运转如意，小境界悄然推进。"
     ],
     loss: [
       "强行催动功法，气机逆行，闭关无功。",
@@ -68,7 +45,7 @@ const TEMPLATES = {
       "冲击小境界失败，丹田隐痛。"
     ],
     mixed: [
-      "闭关有得，却耗尽积蓄丹药。",
+      "闭关有得，却耗损不少心血。",
       "修为略进，却因灵气反噬留下暗伤。",
       "悟得半篇口诀，代价是肉身疲惫。"
     ]
@@ -88,7 +65,7 @@ const TEMPLATES = {
     mixed: [
       "得千年灵药，也惊动守阵傀儡。",
       "废墟中得功法，却遇金睛猿追杀。",
-      "险死还生，换来一枚筑基丹主药。"
+      "险死还生，换来一丝突破契机。"
     ]
   },
   conflict: {
@@ -127,18 +104,18 @@ const TEMPLATES = {
   },
   breakthrough: {
     gain: [
-      "服筑基丹，灵力冲开经脉，一举筑基。",
-      "得降尘丹辅助，冲击结丹瓶颈。",
+      "灵力冲开经脉，一举筑基。",
+      "灵力凝聚如珠，冲击结丹瓶颈。",
       "闭关数十载，元婴初成。"
     ],
     loss: [
-      "强行冲击筑基，丹药药力反噬，经脉尽裂。",
+      "强行冲击筑基，灵力反噬，经脉尽裂。",
       "结丹失败，金丹碎散，境界跌落。",
       "冲元婴失败，元神受损，寿元大减。"
     ],
     mixed: [
       "冲击大境界未成，却悟得一丝契机。",
-      "丹药药力不足，勉强稳住境界，留下隐患。"
+      "根基不稳，勉强稳住境界，留下隐患。"
     ]
   }
 };
@@ -178,7 +155,7 @@ async function jevJudge(state, count) {
         adventure: "秘境、遗迹、古阵、荒野探索",
         conflict: "斗法、仇杀、门派冲突、截道",
         life: "善缘、故人、凡俗牵挂、道心因果",
-        breakthrough: "大境界瓶颈、突破尝试、丹药机缘、境界跌落"
+        breakthrough: "大境界瓶颈、突破尝试、机缘、境界跌落"
       }
     };
     questions[`severity_${index}`] = {
@@ -230,7 +207,6 @@ async function jevJudge(state, count) {
 
 function applyEvent(state, judgment) {
   const realmIndex = realm => REALMS.findIndex(item => item.name === realm);
-  state.breakthroughItem ??= null;
   state.stageEventCount ??= 0;
   const years = 4 + Math.floor(Math.random() * 5) + judgment.severity;
   state.age += years;
@@ -251,20 +227,13 @@ function applyEvent(state, judgment) {
 
   const index = realmIndex(state.realm);
   const currentStage = REALMS[index].stage;
-  const requiredItem = BREAKTHROUGH_ITEMS[currentStage];
-
-  const shouldSeekItem = state.spirit >= 70 && !state.breakthroughItem;
-  if (shouldSeekItem && judgment.polarity !== "loss" && Math.random() < .5) {
-    state.breakthroughItem = requiredItem.name;
-  }
-
   let breakthrough = false;
   const nextRealm = REALMS[index + 1];
   const targetStage = nextRealm?.stage;
   const ageReady = state.age >= (TARGET_STAGE_AGE[targetStage] || 0);
   const stageReady = ageReady && state.stageEventCount >= 3;
   const isMajorBreakthrough = Boolean(
-    nextRealm && state.spirit >= 100 && stageReady && REALMS[index].stage !== nextRealm.stage && state.breakthroughItem === requiredItem.name
+    nextRealm && state.spirit >= 100 && stageReady && REALMS[index].stage !== nextRealm.stage
   );
 
   if (isMajorBreakthrough) {
@@ -291,7 +260,6 @@ function applyEvent(state, judgment) {
 
     if (roll < successChance) {
       const oldMaxLifespan = state.maxLifespan;
-      state.breakthroughItem = null;
       state.realm = nextRealm.name;
       state.maxLifespan = nextRealm.maxLifespan;
       state.lifespan += Math.max(0, state.maxLifespan - oldMaxLifespan);
@@ -316,15 +284,10 @@ function applyEvent(state, judgment) {
 
   const template = TEMPLATES[judgment.type]?.[judgment.polarity] || TEMPLATES.cultivation.mixed;
   let narrative = pick(template);
-  if (state.breakthroughItem === requiredItem.name && shouldSeekItem) {
-    narrative = `${narrative} 得${requiredItem.source}，获${requiredItem.name}。`;
-  }
-  const location = pick(STAGE_LOCATIONS[currentStage] || STAGE_LOCATIONS.炼气);
-  narrative = `${location}：${narrative}`;
   if (isMajorBreakthrough) {
-    narrative = `${narrative} 此番冲关依赖${requiredItem.name}与自身根基。`;
-  } else if (state.spirit >= 100 && !state.breakthroughItem) {
-    narrative = `${narrative} 修为已至瓶颈，唯缺${requiredItem.name}。`;
+    narrative = `${narrative} 修为圆满，尝试冲击大境界。`;
+  } else if (state.spirit >= 100) {
+    narrative = `${narrative} 修为已至瓶颈，根基尚待沉淀。`;
   }
   if (breakthrough) {
     narrative = `${narrative} 瓶颈松动，突破至${state.realm}，寿元上限升至${state.maxLifespan}年。`;
