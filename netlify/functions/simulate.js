@@ -1,10 +1,10 @@
 const JEVS = "https://api.typesafe.ai/v1/systemone";
 const TARGET_STAGE_AGE = {
-  筑基: 25,
+  筑基: 22,
   结丹: 120,
   元婴: 220,
   化神: 500,
-  渡劫: 900
+  渡劫: 850
 };
 const LLMS = "https://api.deepseek.com/chat/completions";
 
@@ -224,7 +224,14 @@ function applyEvent(state, judgment) {
   const realmIndex = realm => REALMS.findIndex(item => item.name === realm);
   state.stageEventCount ??= 0;
   state.foundationDamage ??= 0;
-  const years = 4 + Math.floor(Math.random() * 5) + judgment.severity;
+  const stageYearMultiplier = {
+    炼气: .75,
+    筑基: 1,
+    结丹: 1.2,
+    元婴: 1.45,
+    化神: 1.7
+  }[REALMS[realmIndex(state.realm)]?.stage] || 1;
+  const years = Math.max(2, Math.round((3 + Math.floor(Math.random() * 5) + judgment.severity) * stageYearMultiplier));
   state.age += years;
   state.lifespan = Math.max(0, state.lifespan - years);
   state.year += years;
@@ -272,22 +279,29 @@ function applyEvent(state, judgment) {
   let breakthrough = false;
   const nextRealm = REALMS[index + 1];
   const targetStage = nextRealm?.stage;
+  const requiredStageEvents = {
+    筑基: 3,
+    结丹: 5,
+    元婴: 7,
+    化神: 9,
+    渡劫: 12
+  }[targetStage] || 3;
   const ageReady = state.age >= (TARGET_STAGE_AGE[targetStage] || 0);
-  const stageReady = ageReady && state.stageEventCount >= 3;
+  const stageReady = ageReady && state.stageEventCount >= requiredStageEvents;
   const isMajorBreakthrough = Boolean(
     nextRealm && state.spirit >= 100 && stageReady && REALMS[index].stage !== nextRealm.stage
   );
 
   if (isMajorBreakthrough) {
     const majorStage = currentStage;
-    const successBase = majorStage === "炼气" ? .7 : majorStage === "筑基" ? .45 : majorStage === "结丹" ? .32 : majorStage === "元婴" ? .24 : .2;
+    const successBase = majorStage === "炼气" ? .82 : majorStage === "筑基" ? .55 : majorStage === "结丹" ? .34 : majorStage === "元婴" ? .22 : .16;
     const rootBonus = (state.spiritRoot?.speed || 1) * .04;
     const eventBonus = judgment.type === "breakthrough" ? .08 : judgment.polarity === "gain" ? .04 : 0;
     const successChance = Math.max(.05, Math.min(.82, successBase + rootBonus + eventBonus - state.foundationDamage * .12));
     const roll = Math.random();
 
     if (nextRealm.terminal) {
-      const ascensionChance = Math.min(.75, .25 + (state.spiritRoot?.speed || 1) * .12 + eventBonus);
+      const ascensionChance = Math.min(.45, .18 + (state.spiritRoot?.speed || 1) * .07 + eventBonus * .5 - state.foundationDamage * .08);
       const ascended = Math.random() < ascensionChance;
       state.ended = true;
       state.alive = ascended;
