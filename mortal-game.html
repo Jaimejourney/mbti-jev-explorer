@@ -19,7 +19,7 @@ h1{font-family:var(--serif);font-size:27px;margin:0;letter-spacing:-1px}.brand s
 .divider{height:1px;background:var(--line);margin:14px 0}.meta{display:grid;gap:7px;font-size:12px;color:#4c473d}.meta-row{display:flex;justify-content:space-between;gap:10px}.meta-row span{font-family:var(--mono);font-size:10px;color:var(--muted)}.meta-row b{font-weight:600}
 .main{display:grid;grid-template-rows:minmax(0,1fr) auto;min-height:0;overflow:hidden}
 .timeline-panel{display:flex;flex-direction:column;overflow:hidden}.timeline-head{padding:11px 16px;border-bottom:1px solid var(--line);background:rgba(248,250,255,.7);display:flex;justify-content:space-between;align-items:center}.timeline-head h3{font-family:var(--serif);font-size:18px;margin:0}.timeline-head span{font-family:var(--mono);font-size:10px;color:var(--muted)}
-.timeline{flex:1;overflow-y:auto;padding:16px;display:grid;gap:9px;align-content:start}.event{border:1px solid var(--line);background:#fff;border-radius:9px;padding:11px 12px}.event.breakthrough{background:#f2fbf7;border-color:rgba(23,122,91,.35)}.event.death{background:#fff2f0;border-color:rgba(180,52,44,.32)}.event-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}.event-age{font-family:var(--serif);font-size:16px}.event-tags{display:flex;gap:5px}.tag{font-family:var(--mono);font-size:9px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 6px}.event p{margin:0;font-size:13px;line-height:1.65;color:#37322a}.epilogue{border:1px dashed rgba(180,123,35,.4);background:#fffaf0;border-radius:9px;padding:11px 12px;font-family:var(--serif);color:#5c4a25}
+.timeline{flex:1;overflow-y:auto;padding:16px;display:grid;gap:10px;align-content:start}.event{border:1px solid var(--line);border-left:4px solid var(--muted);background:#fff;border-radius:9px;padding:11px 12px}.event.cultivation{border-left-color:#177a5b}.event.adventure{border-left-color:#2f6fed}.event.conflict{border-left-color:#b4342c}.event.life{border-left-color:#b47b23}.event.breakthrough{border-left-color:#7c3aed;background:#f8f6ff}.event.tribulation{border-left-color:#c2410c;background:#fff7ed}.event.death{background:#fff2f0;border-color:rgba(180,52,44,.32)}.event-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:7px}.event-age{display:grid;gap:2px;font-family:var(--serif);font-size:16px;line-height:1.2}.event-age small{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.5px}.event-tags{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:5px;max-width:58%}.tag{font-family:var(--mono);font-size:9px;color:var(--muted);border:1px solid var(--line);background:#fff;border-radius:999px;padding:2px 6px}.tag.cultivation{color:#177a5b;border-color:rgba(23,122,91,.35);background:rgba(23,122,91,.08)}.tag.adventure{color:#2459c4;border-color:rgba(47,111,237,.35);background:rgba(47,111,237,.08)}.tag.conflict{color:#a12622;border-color:rgba(180,52,44,.35);background:rgba(180,52,44,.08)}.tag.life{color:#8a5a12;border-color:rgba(180,123,35,.4);background:rgba(180,123,35,.1)}.tag.breakthrough{color:#6d28d9;border-color:rgba(124,58,237,.35);background:rgba(124,58,237,.08)}.tag.tribulation{color:#9a3412;border-color:rgba(194,65,12,.35);background:rgba(194,65,12,.08)}.tag.gain{color:#177a5b;border-color:rgba(23,122,91,.3);background:rgba(23,122,91,.07)}.tag.loss{color:#a12622;border-color:rgba(180,52,44,.3);background:rgba(180,52,44,.07)}.tag.mixed{color:#6d675c;border-color:rgba(109,103,92,.3);background:rgba(109,103,92,.07)}.tag.time{color:#2459c4;border-color:rgba(47,111,237,.25);background:rgba(47,111,237,.06)}.tag.spirit{color:#177a5b;border-color:rgba(23,122,91,.25);background:rgba(23,122,91,.06)}.tag.twist{color:#9d174d;border-color:rgba(157,23,77,.35);background:rgba(157,23,77,.08)}.event p{margin:0;font-size:13px;line-height:1.65;color:#37322a}.epilogue{border:1px dashed rgba(180,123,35,.4);background:#fffaf0;border-radius:9px;padding:11px 12px;font-family:var(--serif);color:#5c4a25}
 .controls{padding:14px 16px;border-top:1px solid var(--line);background:rgba(248,250,255,.65)}
 button{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:9px;padding:13px;font-family:var(--serif);font-size:15px;cursor:pointer;transition:.18s}button:hover{transform:translateY(-2px);border-color:rgba(23,122,91,.42);box-shadow:0 14px 34px rgba(23,122,91,.12)}button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
 .primary{border:0;background:linear-gradient(135deg,#177a5b,#43a687 55%,#b47b23);color:#fff;box-shadow:0 16px 38px rgba(23,122,91,.2)}
@@ -83,6 +83,9 @@ button{border:1px solid var(--line);background:#fff;color:var(--ink);border-radi
 const ROOTS=[{name:"天灵根",speed:1.8,weight:2},{name:"变异灵根",speed:1.5,weight:4},{name:"双灵根",speed:1.25,weight:24},{name:"三灵根",speed:1,weight:30},{name:"伪灵根",speed:.7,weight:40}];
 const START_REALMS=["炼气三层","炼气四层","炼气五层","炼气六层","炼气七层","炼气八层"];
 const START_SPIRIT={"炼气三层":20,"炼气四层":30,"炼气五层":40,"炼气六层":50,"炼气七层":65,"炼气八层":80};
+const TYPE_LABELS={cultivation:"修炼",adventure:"历练",conflict:"斗争",life:"尘缘",breakthrough:"突破",tribulation:"渡劫"};
+const POLARITY_LABELS={gain:"得",loss:"失",mixed:"得失"};
+const TWIST_LABELS={realmFall:"境界跌落",spiritWound:"修为重创",lifeDrain:"寿元折损",foundationDamage:"道基受损",greatFortune:"大机缘"};
 const $=id=>document.getElementById(id);
 let state=null,autoRunning=false;
 function randomRoot(){let total=ROOTS.reduce((sum,root)=>sum+root.weight,0),roll=Math.random()*total;for(const root of ROOTS){roll-=root.weight;if(roll<=0)return{...root}}return{...ROOTS.at(-1)}}
@@ -93,7 +96,13 @@ function render(){
   document.querySelector(".life i").style.width=Math.max(0,Math.min(100,state.lifespan/state.maxLifespan*100))+"%";document.querySelector(".life output").textContent=state.lifespan+"年";
   $("age").textContent=state.age+"岁";$("realm").textContent=state.realm;$("root").textContent=`${state.spiritRoot.name} · 速度${state.spiritRoot.speed}x`;$("events").textContent=state.eventCount;
 }
-function addEvent(event){const div=document.createElement("div");div.className="event"+(event.breakthrough?" breakthrough":"")+(state.ended?" death":"");div.innerHTML=`<div class="event-head"><div class="event-age">${event.age}岁 · ${event.realm}</div><div class="event-tags"><span class="tag">${event.type}</span><span class="tag">${event.polarity}</span><span class="tag">烈度${event.severity}</span>${event.stateAfter?`<span class="tag">修为${event.stateAfter.spirit}%</span>`:""}</div></div><p>${event.narrative}</p>`;$("timeline").prepend(div)}
+function addEvent(event){
+  const div=document.createElement("div");
+  const startAge=Math.max(0,event.age-event.years);
+  div.className=`event ${event.type}`+(event.breakthrough?" breakthrough":"")+(state.ended?" death":"");
+  div.innerHTML=`<div class="event-head"><div class="event-age"><span>第${event.stateAfter?.eventCount ?? state.eventCount}事</span><span>${startAge}—${event.age}岁</span><small>${event.realm} · 历时${event.years}年</small></div><div class="event-tags"><span class="tag ${event.type}">${TYPE_LABELS[event.type]||event.type}</span><span class="tag ${event.polarity}">${POLARITY_LABELS[event.polarity]||event.polarity}</span><span class="tag time">历时${event.years}年</span><span class="tag">烈度${event.severity}</span>${event.fateTwist?`<span class="tag twist">${TWIST_LABELS[event.fateTwist]||event.fateTwist}</span>`:""}${event.stateAfter?`<span class="tag spirit">修为${event.stateAfter.spirit}%</span>`:""}</div></div><p>${event.narrative}</p>`;
+  $("timeline").prepend(div);
+}
 function addEpilogue(text){if(!text)return;const div=document.createElement("div");div.className="epilogue";div.textContent=text;$("timeline").prepend(div)}
 function showFinal(){
   const ending=state.ending;
@@ -119,7 +128,7 @@ async function simulate(count){
 }
 async function startLife(){
   if(autoRunning)return;autoRunning=true;$("start").disabled=true;state=createState();$("timeline").innerHTML="";render();$("status").textContent="自动推进中";
-  while(autoRunning&&!state.ended){await simulate(8);await new Promise(resolve=>setTimeout(resolve,250))}
+  while(autoRunning&&!state.ended){await simulate(12);await new Promise(resolve=>setTimeout(resolve,180))}
   if(autoRunning){$("status").textContent=state.ending==="ascended"?"飞升灵界":state.ending==="tribulation_failed"?"渡劫失败":"寿元耗尽";autoRunning=false;$("start").textContent="重来";showFinal()}
   $("start").disabled=false;
 }
